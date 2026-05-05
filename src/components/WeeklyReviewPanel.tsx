@@ -13,6 +13,19 @@ type ReviewArtifact = {
   nextStep: string;
 };
 
+type WeeklyReviewResponse = {
+  content?: string;
+  review?: {
+    hero?: string;
+    whatStoodOut?: string[];
+    whatSupportedYou?: string[];
+    carryForward?: string[];
+    smallNextStep?: string;
+  };
+  stats?: WeeklyStats;
+  fallback?: boolean;
+};
+
 const DEFAULT_WEEK_START = new Date(2025, 4, 5);
 
 const FALLBACK_ARTIFACT: ReviewArtifact = {
@@ -37,13 +50,19 @@ const FALLBACK_ARTIFACT: ReviewArtifact = {
 };
 
 function stripMarkdown(line: string): string {
-  return line
+  let clean = line
     .replace(/^#{1,6}\s+/, "")
     .replace(/^\d+\)\s+/, "")
     .replace(/^\d+\.\s+/, "")
-    .replace(/^[-*]\s+/, "")
-    .replace(/\*\*/g, "")
+    .replace(/^[-*•]\s+/, "")
+    .replace(/^[-*•]\s+/, "")
+    .replace(/[*_`#>]/g, "")
+    .replace(/\s+/g, " ")
     .trim();
+  while (/^[-*•]\s+/.test(clean)) {
+    clean = clean.replace(/^[-*•]\s+/, "").trim();
+  }
+  return clean;
 }
 
 function isHeading(line: string, headings: string[]): boolean {
@@ -63,8 +82,55 @@ function collectSection(lines: string[], startHeadings: string[], stopHeadings: 
   return collected;
 }
 
+function firstSentences(text: string, maxChars: number): string {
+  const parts = text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)?.map((part) => part.trim()).filter(Boolean) ?? [];
+  const picked: string[] = [];
+  for (const part of parts) {
+    const next = [...picked, part].join(" ");
+    if (picked.length >= 2 || next.length > maxChars) break;
+    picked.push(part);
+  }
+  const fallback = picked.join(" ") || text;
+  if (fallback.length <= maxChars) return fallback;
+  const clipped = fallback.slice(0, maxChars).replace(/\s+\S*$/, "").trim();
+  return `${clipped}.`;
+}
+
+function privacySafeHero(text: string): string {
+  const clean = stripMarkdown(text);
+  const sensitivePattern =
+    /\b(breakup|divorce|relationship|conflict|fight|argument|health|medical|diagnosis|medication|panic|trauma|abuse|grief|death|job loss|financial|money|family|partner|spouse|therapy|therapist|tuesday|wednesday|thursday|friday|saturday|sunday|monday)\b/i;
+  if (!clean || sensitivePattern.test(clean)) {
+    return FALLBACK_ARTIFACT.hero;
+  }
+  return firstSentences(clean, 220);
+}
+
+function cleanItems(items: string[], fallback: string[]): string[] {
+  const cleaned = items.map(stripMarkdown).filter(Boolean).slice(0, 3);
+  return cleaned.length ? cleaned : fallback.slice(0, 3);
+}
+
+function parseJsonReview(content: string): ReviewArtifact | null {
+  try {
+    const parsed = JSON.parse(content) as WeeklyReviewResponse["review"];
+    if (!parsed || typeof parsed !== "object") return null;
+    return {
+      hero: privacySafeHero(String(parsed.hero ?? "")),
+      stoodOut: cleanItems(parsed.whatStoodOut ?? [], FALLBACK_ARTIFACT.stoodOut),
+      supported: cleanItems(parsed.whatSupportedYou ?? [], FALLBACK_ARTIFACT.supported),
+      carryForward: cleanItems(parsed.carryForward ?? [], FALLBACK_ARTIFACT.carryForward),
+      nextStep: stripMarkdown(String(parsed.smallNextStep ?? "")) || FALLBACK_ARTIFACT.nextStep,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function parseWeeklyReview(content: string | null): ReviewArtifact {
   if (!content) return FALLBACK_ARTIFACT;
+  const jsonReview = parseJsonReview(content);
+  if (jsonReview) return jsonReview;
   const lines = content
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -99,11 +165,11 @@ function parseWeeklyReview(content: string | null): ReviewArtifact {
   const plan = carryForward.filter(Boolean);
 
   return {
-    hero,
-    stoodOut: stoodOut.length ? stoodOut.slice(0, 4) : FALLBACK_ARTIFACT.stoodOut,
-    supported: supported.length ? supported.slice(0, 4) : FALLBACK_ARTIFACT.supported,
-    carryForward: plan.length ? plan.slice(0, 3) : FALLBACK_ARTIFACT.carryForward,
-    nextStep: plan[0] || FALLBACK_ARTIFACT.nextStep,
+    hero: privacySafeHero(hero),
+    stoodOut: cleanItems(stoodOut, FALLBACK_ARTIFACT.stoodOut),
+    supported: cleanItems(supported, FALLBACK_ARTIFACT.supported),
+    carryForward: cleanItems(plan, FALLBACK_ARTIFACT.carryForward),
+    nextStep: stripMarkdown(plan[0] || FALLBACK_ARTIFACT.nextStep),
   };
 }
 
@@ -117,11 +183,10 @@ function formatWeekRange(start: Date): string {
   const end = addDays(start, 6);
   const startLabel = start.toLocaleDateString(undefined, { month: "long", day: "numeric" });
   const endLabel = end.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
-  return `${startLabel} – ${endLabel}`;
+  return `${startLabel} - ${endLabel}`;
 }
 
-function buildJournalBody(artifact: ReviewArtifact, weekRange: string, rawContent: string | null): string {
-  if (rawContent) return rawContent;
+function buildJournalBody(artifact: ReviewArtifact, weekRange: string): string {
   return [
     `Weekly Review - ${weekRange}`,
     "",
@@ -163,16 +228,14 @@ export function WeeklyReviewPanel() {
     setSavedJournal(false);
     try {
       const r = await fetch("/api/weekly-review/generate", { method: "POST" });
-      const data = (await r.json().catch(() => ({}))) as {
-        content?: string;
-        stats?: WeeklyStats;
-        fallback?: boolean;
-      };
+      const data = (await r.json().catch(() => ({}))) as WeeklyReviewResponse;
       if (!r.ok) {
         setErr("Could not generate weekly review.");
         return;
       }
-      setContent(String(data.content || "").trim() || null);
+      const nextContent =
+        data.review && typeof data.review === "object" ? JSON.stringify(data.review) : String(data.content || "").trim();
+      setContent(nextContent || null);
       setStats(data.stats || null);
       if (data.fallback) {
         setHint("AI was unavailable, so Quiet Current prepared a local summary from your saved activity.");
@@ -185,7 +248,7 @@ export function WeeklyReviewPanel() {
   }
 
   async function onCopy() {
-    const body = buildJournalBody(artifact, weekRange, content);
+    const body = buildJournalBody(artifact, weekRange);
     await navigator.clipboard.writeText(body);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2200);
@@ -194,7 +257,7 @@ export function WeeklyReviewPanel() {
   async function onSaveToJournal() {
     if (!hasReview) return;
     setErr(null);
-    const body = buildJournalBody(artifact, weekRange, content);
+    const body = buildJournalBody(artifact, weekRange);
     const r = await fetch("/api/notes", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -238,7 +301,7 @@ export function WeeklyReviewPanel() {
             aria-label="Previous week"
             onClick={() => setWeekStart((current) => addDays(current, -7))}
           >
-            <span aria-hidden>‹</span>
+            <span aria-hidden>{"<"}</span>
           </button>
           <div className="weekly-week-current">
             <span className="weekly-calendar-mark" aria-hidden />
@@ -250,7 +313,7 @@ export function WeeklyReviewPanel() {
             aria-label="Next week"
             onClick={() => setWeekStart((current) => addDays(current, 7))}
           >
-            <span aria-hidden>›</span>
+            <span aria-hidden>{">"}</span>
           </button>
           <span className="weekly-local-pill">
             <span className="weekly-lock-mark" aria-hidden />

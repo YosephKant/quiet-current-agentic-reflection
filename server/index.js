@@ -192,14 +192,18 @@ You are writing a warm weekly review from the user's own notes and chats.
 - Emphasize growth, resilience, and practical next steps.
 - Keep tone inspiring but not inflated.
 - No diagnosis, no promises, no medical advice.
+- The hero must be privacy-safe, discreet, and general.
+- Do not put sensitive personal specifics in the hero: no names, relationships, breakups, health details, private conflicts, dates, or emotionally loaded events.
+- Specifics may appear only as gentle generalized lower-detail bullets.
 
-Output:
-1) Weekly review (short paragraph)
-2) Patterns I noticed (3 bullets)
-3) What helped this week (3 bullets)
-4) Gentle plan for next week (5 numbered actions, each small)
-5) Inspiring lines (2 short quote-style lines)
-Keep under 520 words.`;
+Output JSON only. Do not use markdown.
+{
+  "hero": "1-2 sentence privacy-safe summary, 180-220 characters max",
+  "whatStoodOut": ["2-3 concise privacy-safe observations"],
+  "whatSupportedYou": ["2-3 concise supports"],
+  "carryForward": ["2-3 concise carry-forward ideas"],
+  "smallNextStep": "one gentle actionable next step"
+}`;
 
 const INSIGHTS_SYSTEM = `${BASE_SAFETY_PROMPT}
 
@@ -990,57 +994,68 @@ function buildWeeklyReviewUserMessage(ctx) {
 
 function fallbackWeeklyReview(ctx) {
   if (ctx.noteCount === 0 && ctx.chatTurns === 0) {
-    return [
-      "Weekly review",
-      "You are at a fresh beginning this week, and that is a strong place to start from.",
-      "",
-      "Patterns I noticed",
-      "- You are willing to pause and reflect.",
-      "- You want calm that is realistic, not performative.",
-      "- You respond well to gentle consistency.",
-      "",
-      "What helped this week",
-      "- Returning to simple breathing cues.",
-      "- Naming feelings without judging them.",
-      "- Taking one tiny action rather than waiting for motivation.",
-      "",
-      "Gentle plan for next week",
-      "1. One 5-minute sit each day, same time if possible.",
-      "2. Capture one sentence in Notes after any emotional spike.",
-      "3. End each day with one gratitude line.",
-      "4. Do one short practice when stress rises, not after burnout.",
-      "5. Review this plan once mid-week and soften it if needed.",
-      "",
-      "Inspiring lines",
-      "\"Gentle repetition is a form of self-trust.\"",
-      "\"You can grow quietly and still grow deeply.\"",
-    ].join("\n");
+    return {
+      hero: "This week is a fresh beginning. A few small notes, practices, or intentions will give your next review more shape.",
+      whatStoodOut: [
+        "There is room to begin without pressure.",
+        "One honest note is enough to create a useful signal.",
+      ],
+      whatSupportedYou: [
+        "Simple breathing cues can help create a starting point.",
+        "Gentle consistency matters more than volume.",
+      ],
+      carryForward: [
+        "Try one short practice and one sentence of reflection this week.",
+        "Let the app gather only what you choose to save locally.",
+      ],
+      smallNextStep: "Add one note or complete one short practice, then return when there is more local activity.",
+    };
   }
-  return [
-    "Weekly review",
-    "You kept returning to awareness this week, and that consistency matters more than intensity.",
-    "",
-    "Patterns I noticed",
-    "- You are actively searching for steadier emotional footing.",
-    "- Reflection and language help you regulate.",
-    "- You do better with small anchors than big plans.",
-    "",
-    "What helped this week",
-    "- Brief check-ins instead of long perfectionist sessions.",
-    "- Turning chat insights into notes.",
-    "- Keeping expectations compassionate and realistic.",
-    "",
-    "Gentle plan for next week",
-    "1. Keep one morning intention line each day.",
-    "2. Use one trusted practice as your default reset.",
-    "3. Log one micro-win every evening.",
-    "4. Protect one short no-phone quiet block daily.",
-    "5. Ask for the next better-feeling thought when overwhelmed.",
-    "",
-    "Inspiring lines",
-    "\"A calmer life is built in small, repeatable moments.\"",
-    "\"Progress often looks like returning, again and again.\"",
-  ].join("\n");
+  return {
+    hero: "This week asked for steadiness over force. You returned to short practices, honest notes, and small moments of clarity.",
+    whatStoodOut: [
+      "Reflection helped turn scattered moments into clearer signals.",
+      "Small anchors were more useful than large plans.",
+      "You kept returning to awareness with practical consistency.",
+    ],
+    whatSupportedYou: [
+      "Brief check-ins created space without becoming another task.",
+      "Turning insights into notes helped preserve what mattered.",
+      "Realistic expectations made the week easier to meet.",
+    ],
+    carryForward: [
+      "Keep one morning intention line each day.",
+      "Use one trusted practice as your default reset.",
+      "Log one small win in the evening.",
+    ],
+    smallNextStep: "Choose one 10-minute practice this week and put it somewhere visible on your calendar.",
+  };
+}
+
+function cleanWeeklyReviewText(value, maxLen = 260) {
+  return String(value ?? "")
+    .replace(/[*_`#>]/g, "")
+    .replace(/^\s*(?:[-•*]\s*)+/gm, "")
+    .replace(/^\s*\d+[.)]\s*/gm, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLen)
+    .trim();
+}
+
+function normalizeWeeklyReviewPayload(value, fallback) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : fallback;
+  const pickArray = (items, fallbackItems) => {
+    const raw = Array.isArray(items) ? items : fallbackItems;
+    return raw.map((item) => cleanWeeklyReviewText(item, 220)).filter(Boolean).slice(0, 3);
+  };
+  return {
+    hero: cleanWeeklyReviewText(source.hero, 220) || fallback.hero,
+    whatStoodOut: pickArray(source.whatStoodOut, fallback.whatStoodOut),
+    whatSupportedYou: pickArray(source.whatSupportedYou, fallback.whatSupportedYou),
+    carryForward: pickArray(source.carryForward, fallback.carryForward),
+    smallNextStep: cleanWeeklyReviewText(source.smallNextStep, 220) || fallback.smallNextStep,
+  };
 }
 
 function collectSessionTurnsForPractice(db, sessionId) {
@@ -1558,10 +1573,17 @@ export function createApp(options = {}) {
         timeoutMs: 120_000,
       });
       const clean = String(content || "").trim();
-      if (!clean) return res.json({ content: fallbackWeeklyReview(ctx), stats: ctx, fallback: true });
-      return res.json({ content: clean, stats: ctx });
+      const fallback = fallbackWeeklyReview(ctx);
+      const parsed = parseJsonObjectFromModelText(clean);
+      if (!clean || !parsed) {
+        const review = normalizeWeeklyReviewPayload(fallback, fallback);
+        return res.json({ review, content: JSON.stringify(review), stats: ctx, fallback: true });
+      }
+      const review = normalizeWeeklyReviewPayload(parsed, fallback);
+      return res.json({ review, content: JSON.stringify(review), stats: ctx });
     } catch {
-      return res.json({ content: fallbackWeeklyReview(ctx), stats: ctx, fallback: true });
+      const review = normalizeWeeklyReviewPayload(fallbackWeeklyReview(ctx), fallbackWeeklyReview(ctx));
+      return res.json({ review, content: JSON.stringify(review), stats: ctx, fallback: true });
     }
   });
 

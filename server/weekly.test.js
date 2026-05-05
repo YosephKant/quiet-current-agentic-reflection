@@ -24,14 +24,50 @@ describe("weekly review + generated practice API", () => {
       "fetch",
       vi.fn(async () => ({
         ok: true,
-        json: async () => ({ message: { content: "Weekly review content" } }),
+        json: async () => ({
+          message: {
+            content: JSON.stringify({
+              hero: "This week asked for steadiness over force. You returned to short practices and honest notes.",
+              whatStoodOut: ["Small anchors helped you notice patterns."],
+              whatSupportedYou: ["Brief check-ins created space."],
+              carryForward: ["Keep one morning intention line."],
+              smallNextStep: "Choose one 10-minute practice this week.",
+            }),
+          },
+        }),
       }))
     );
 
     const res = await request(app).post("/api/weekly-review/generate").send({});
     expect(res.status).toBe(200);
-    expect(String(res.body.content)).toContain("Weekly review content");
+    expect(res.body.review.hero).toContain("steadiness over force");
+    expect(res.body.review.whatStoodOut).toEqual(["Small anchors helped you notice patterns."]);
+    expect(String(res.body.content)).toContain("smallNextStep");
     expect(res.body.stats.noteCount).toBeGreaterThanOrEqual(1);
+  });
+
+  it("falls back to structured privacy-safe JSON when weekly review markdown is returned", async () => {
+    db = new Database(":memory:");
+    const { app } = createApp({ db });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          message: {
+            content:
+              "**Weekly review**\n- This includes a relationship conflict and private health detail.\n\nPatterns I noticed\n- - Raw markdown.",
+          },
+        }),
+      }))
+    );
+
+    const res = await request(app).post("/api/weekly-review/generate").send({});
+    expect(res.status).toBe(200);
+    expect(res.body.fallback).toBe(true);
+    expect(res.body.review.hero).not.toMatch(/relationship|health/i);
+    expect(Array.isArray(res.body.review.whatStoodOut)).toBe(true);
   });
 
   it("creates a new practice from chat session context", async () => {
