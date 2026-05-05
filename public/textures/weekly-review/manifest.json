@@ -1,0 +1,20 @@
+{
+  "assets": [
+    {
+      "file": "editorial-paper-bg.png",
+      "use": "Main weekly card background"
+    },
+    {
+      "file": "soft-vignette.png",
+      "use": "Subtle edge depth"
+    },
+    {
+      "file": "leaf-divider.png",
+      "use": "Section divider"
+    },
+    {
+      "file": "highlight-soft.png",
+      "use": "Next step highlight card"
+    }
+  ]
+}

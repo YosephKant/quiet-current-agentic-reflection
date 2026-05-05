@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="520" viewBox="0 0 720 520">
+  <defs>
+    <radialGradient id="light" cx="58%" cy="45%" r="48%">
+      <stop offset="0" stop-color="#f8fbf4"/>
+      <stop offset="0.42" stop-color="#edf3e9" stop-opacity="0.78"/>
+      <stop offset="1" stop-color="#fbf6ed" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb" cx="46%" cy="42%" r="58%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.32" stop-color="#dce8d9"/>
+      <stop offset="0.72" stop-color="#afc8bb"/>
+      <stop offset="1" stop-color="#7da99d"/>
+    </radialGradient>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="16" stdDeviation="14" flood-color="#2a4f49" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+  <rect width="720" height="520" fill="#fffaf3"/>
+  <rect width="720" height="520" fill="url(#light)"/>
+  <path d="M452 342c-44-48-37-124 8-165m-24 159c-33-35-28-91 6-121m-42 115c-25-39-15-88 24-111" fill="none" stroke="#88a394" stroke-opacity="0.18" stroke-width="2"/>
+  <g fill="#ffffff" opacity="0.72">
+    <circle cx="214" cy="160" r="3"/>
+    <circle cx="506" cy="118" r="2.8"/>
+    <circle cx="566" cy="235" r="2.2"/>
+    <circle cx="326" cy="110" r="2"/>
+    <circle cx="384" cy="196" r="1.7"/>
+    <circle cx="612" cy="142" r="2.5"/>
+  </g>
+  <ellipse cx="476" cy="382" rx="96" ry="17" fill="#52766f" opacity="0.12"/>
+  <circle cx="476" cy="256" r="112" fill="url(#orb)" filter="url(#softShadow)"/>
+  <circle cx="476" cy="256" r="79" fill="none" stroke="#fffaf3" stroke-opacity="0.45" stroke-width="2"/>
+  <circle cx="476" cy="256" r="28" fill="#c7d8cf" stroke="#fffdf8" stroke-opacity="0.7" stroke-width="2"/>
+</svg>
