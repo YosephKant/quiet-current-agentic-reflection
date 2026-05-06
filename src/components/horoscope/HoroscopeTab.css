@@ -435,16 +435,41 @@
 .hz-reading-card {
   position: relative;
   overflow: hidden;
-  min-height: 360px;
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  border-radius: var(--hz-radius);
+  min-height: 420px;
+  border: 0;
+  border-radius: 30px;
   background:
-    linear-gradient(90deg, rgba(255, 249, 243, 0.92) 0%, rgba(255, 249, 243, 0.62) 46%, rgba(47, 39, 107, 0.16) 100%),
-    var(--hz-hero-bg) center / cover no-repeat,
-    linear-gradient(135deg, #f2d7ea, #5b4ac0);
+    radial-gradient(circle at 86% 18%, rgba(244, 233, 255, 0.52) 0%, rgba(206, 190, 239, 0.24) 18%, transparent 39%),
+    radial-gradient(ellipse at 70% 62%, rgba(177, 161, 220, 0.22) 0%, transparent 42%),
+    linear-gradient(122deg, #201b4d 0%, #302060 36%, #775fa7 76%, #a996bd 100%);
   box-shadow:
-    0 26px 62px rgba(42, 31, 76, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+    0 28px 68px rgba(34, 25, 67, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.hz-reading-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 88% 14%, rgba(255, 255, 255, 0.32), transparent 22%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.08), transparent 24%, transparent 68%, rgba(16, 10, 43, 0.34)),
+    linear-gradient(90deg, rgba(13, 11, 44, 0.2), transparent 32%, transparent 68%, rgba(19, 12, 50, 0.22));
+}
+
+.hz-reading-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 34% 42%, rgba(255, 255, 255, 0.08), transparent 34%),
+    radial-gradient(ellipse at 65% 68%, rgba(255, 255, 255, 0.06), transparent 40%);
+  filter: blur(10px);
+  opacity: 0.78;
 }
 
 .hz-reading-card__stars,
@@ -462,81 +487,128 @@
 
 .hz-reading-card__grain {
   background-image: var(--hz-grain);
-  background-size: 240px 240px;
-  opacity: 0.025;
+  background-size: 260px 260px;
+  opacity: 0.028;
+  mix-blend-mode: soft-light;
+}
+
+.hz-reading-card__haze {
+  position: absolute;
+  inset: -18% -12% -22%;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 74% 20%, rgba(255, 247, 235, 0.16), transparent 26%),
+    radial-gradient(ellipse at 20% 78%, rgba(205, 190, 238, 0.12), transparent 34%);
+  filter: blur(18px);
+}
+
+.hz-reading-card__moon {
+  position: absolute;
+  top: -7%;
+  right: -4%;
+  z-index: 1;
+  width: clamp(190px, 23vw, 330px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.96) 0%, rgba(243, 237, 253, 0.86) 25%, rgba(217, 204, 239, 0.58) 56%, rgba(171, 155, 208, 0.08) 78%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(205, 193, 229, 0.5));
+  box-shadow:
+    0 0 70px rgba(244, 235, 255, 0.42),
+    0 0 150px rgba(207, 190, 238, 0.34),
+    inset -24px -30px 50px rgba(129, 109, 172, 0.16),
+    inset 20px 16px 34px rgba(255, 255, 255, 0.48);
+  filter: blur(1.2px);
+  opacity: 0.92;
 }
 
 .hz-reading-card__content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   min-height: inherit;
-  max-width: 690px;
+  max-width: 760px;
   flex-direction: column;
   justify-content: center;
-  padding: clamp(2rem, 4vw, 4rem);
+  padding: clamp(2.4rem, 5vw, 5rem);
 }
 
 .hz-reading-card h3,
 .hz-loading-copy h3 {
-  margin: 0.58rem 0 0.82rem;
-  max-width: 640px;
-  color: var(--hz-ink);
+  margin: 0.68rem 0 0.9rem;
+  max-width: 760px;
+  color: rgba(255, 250, 244, 0.94);
   font-family: var(--hz-serif);
-  font-size: clamp(2.3rem, 5vw, 4.9rem);
+  font-size: clamp(3rem, 5.2vw, 5.55rem);
   font-weight: 500;
-  letter-spacing: -0.055em;
-  line-height: 0.98;
+  letter-spacing: -0.065em;
+  line-height: 0.9;
+  text-wrap: balance;
+  text-shadow: 0 16px 38px rgba(20, 12, 48, 0.28);
+}
+
+.hz-reading-card h3 span {
+  display: block;
+  white-space: nowrap;
 }
 
 .hz-reading-card p,
 .hz-loading-copy p {
-  max-width: 34rem;
+  max-width: 33rem;
   margin: 0;
-  color: var(--hz-ink-soft);
-  font-size: 1.06rem;
-  line-height: 1.65;
+  color: rgba(244, 236, 249, 0.72);
+  font-size: 1.03rem;
+  line-height: 1.62;
 }
 
 .hz-sky-facts {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.72rem;
-  max-width: 720px;
-  margin-top: 2.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.62rem;
+  max-width: 760px;
+  margin-top: 2.25rem;
 }
 
 .hz-sky-facts div {
-  min-height: 92px;
-  padding: 0.9rem;
-  border: 1px solid rgba(255, 255, 255, 0.58);
-  border-radius: 18px;
-  background: rgba(255, 253, 249, 0.64);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  display: inline-flex;
+  min-height: 0;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.62rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.105);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .hz-sky-facts span {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  margin-bottom: 0.52rem;
-  color: var(--hz-muted);
-  font-size: 0.7rem;
+  margin-bottom: 0;
+  color: rgba(239, 230, 248, 0.66);
+  font-size: 0.66rem;
   font-weight: 850;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .hz-sky-facts strong {
-  display: block;
-  color: var(--hz-ink);
-  font-size: 1rem;
-  line-height: 1.35;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.34rem;
+  color: rgba(255, 251, 246, 0.92);
+  font-size: 0.92rem;
+  line-height: 1;
 }
 
 .hz-sky-facts small {
-  color: var(--hz-violet-deep);
-  font-size: 0.78rem;
+  color: rgba(232, 221, 255, 0.72);
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
@@ -786,23 +858,40 @@
   }
 
   .hz-reading-card {
-    min-height: 430px;
+    min-height: 500px;
   }
 
   .hz-reading-card__content,
   .hz-reading-card--loading {
     justify-content: flex-start;
-    padding: 1.55rem;
+    padding: 1.75rem;
   }
 
   .hz-reading-card h3,
   .hz-loading-copy h3 {
-    font-size: clamp(2.25rem, 10vw, 3.35rem);
+    font-size: clamp(1.95rem, 8.6vw, 2.35rem);
+    letter-spacing: -0.055em;
+    line-height: 0.95;
   }
 
-  .hz-sky-facts,
+  .hz-reading-card__moon {
+    top: -3%;
+    right: -22%;
+    width: 260px;
+  }
+
   .hz-guidance-grid {
     grid-template-columns: 1fr;
+  }
+
+  .hz-sky-facts {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hz-sky-facts div {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .hz-guidance-card {

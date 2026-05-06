@@ -362,11 +362,17 @@ export function HoroscopePanel() {
             <section className="hz-reading-card hz-reveal-item" aria-label="Sky snapshot" data-testid="hz-snapshot">
               <div className="hz-reading-card__stars" aria-hidden />
               <div className="hz-reading-card__grain" aria-hidden />
+              <div className="hz-reading-card__haze" aria-hidden />
+              <div className="hz-reading-card__moon" aria-hidden />
               {loading ? <div className="hz-shimmer" aria-hidden /> : null}
 
               <div className="hz-reading-card__content">
                 <span className="hz-kicker">Your sky today</span>
-                <h3>{reading.closing}</h3>
+                <h3>
+                  <span>Today's gentle breeze</span>
+                  <span>carries whispers</span>
+                  <span>of transformation.</span>
+                </h3>
                 <p>
                   Today's sky supports steady choices and honest reflection. Take what feels useful and leave the rest.
                 </p>
