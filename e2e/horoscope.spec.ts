@@ -51,14 +51,14 @@ test.describe("Horoscope tab", () => {
     await page.getByRole("navigation", { name: "Main" }).getByRole("button", { name: "Horoscope", exact: true }).click();
 
     await expect(page.getByRole("heading", { name: "Horoscope", exact: true })).toBeVisible();
-    await expect(page.getByText(/symbolic reading for today/i)).toBeVisible();
-    await expect(page.locator(".qc-page-subtitle").getByText(/entertainment/i)).toBeVisible();
+    await expect(page.getByText(/quiet reflection of today's sky/i)).toBeVisible();
+    await expect(page.getByText(/symbolic reflection for love, career/i)).toBeVisible();
 
     const birthDate = page.locator("#horoscope-birth-date");
     await expect(birthDate).toBeVisible();
     await birthDate.fill("1990-07-15");
 
-    await page.getByRole("button", { name: /Get today.s reading/i }).click();
+    await page.getByTestId("hz-submit").click();
 
     await expect(page.getByRole("region", { name: "Sky snapshot" })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText("E2E love guidance line one.")).toBeVisible({ timeout: 20_000 });
@@ -88,7 +88,7 @@ test.describe("Horoscope tab", () => {
     await expect(page.getByRole("heading", { name: "Horoscope", exact: true })).toBeVisible();
 
     await page.locator("#horoscope-birth-date").fill("2000-01-10");
-    await page.getByRole("button", { name: /Get today.s reading/i }).click();
+    await page.getByTestId("hz-submit").click();
 
     await expect(page.getByRole("region", { name: "Sky snapshot" })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole("heading", { name: "Love", exact: true })).toBeVisible({ timeout: 20_000 });
