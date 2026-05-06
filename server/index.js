@@ -1595,7 +1595,12 @@ export function createApp(options = {}) {
       });
     }
     const birthYmd = `${birthParsed.y}-${String(birthParsed.mo).padStart(2, "0")}-${String(birthParsed.da).padStart(2, "0")}`;
-    const facts = computeHoroscopeAstronomy(birthYmd, new Date());
+    const readingDateParsed =
+      typeof req.body?.readingDate === "string" ? parseBirthDateString(req.body.readingDate) : null;
+    const readingAt = readingDateParsed
+      ? new Date(Date.UTC(readingDateParsed.y, readingDateParsed.mo - 1, readingDateParsed.da, 12, 0, 0))
+      : new Date();
+    const facts = computeHoroscopeAstronomy(birthYmd, readingAt);
     if (!facts) {
       return res.status(400).json({ error: "Invalid birth date" });
     }
@@ -1606,7 +1611,7 @@ export function createApp(options = {}) {
 
     const userMsg = (() => {
       let u = `Generate today's entertainment horoscope JSON.\n\n`;
-      u += `Today's date (server local, for thematic flavor): ${ymdLocal(new Date())}\n`;
+      u += `Reading date (for thematic flavor): ${ymdLocal(readingAt)}\n`;
       u += `User birth date: ${birthYmd}\n`;
       if (birthTime) u += `Birth time (optional context only): ${birthTime}\n`;
       if (birthPlace) u += `Birth place (display/context only): ${birthPlace}\n`;
