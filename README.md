@@ -25,13 +25,21 @@ This repository is prepared as a portfolio project for product engineering, plat
 
 ## Screenshots
 
-| Today | Practice |
+| Today | Practice Hub |
 | --- | --- |
-| ![Quiet Current Today screen](docs/screenshots/home-desktop.png) | ![Quiet Current Practice screen](docs/screenshots/practice-desktop.png) |
+| ![Quiet Current Today screen](docs/screenshots/home-desktop.png) | ![Quiet Current redesigned Practice hub](docs/screenshots/practices-desktop.png) |
 
-| Guide Builder | Weekly Review |
+| Practice Player | Guide |
 | --- | --- |
-| ![Quiet Current Guide Builder screen](docs/screenshots/guide-builder-desktop.png) | ![Quiet Current Weekly Review screen](docs/screenshots/weekly-review-desktop.png) |
+| ![Quiet Current Practice player on mobile](docs/screenshots/practice-player-mobile.png) | ![Quiet Current Guide chat on mobile](docs/screenshots/guide-chat-mobile.png) |
+
+| Journal | Guide Builder |
+| --- | --- |
+| ![Quiet Current Journal on mobile](docs/screenshots/journal-mobile.png) | ![Quiet Current Guide Builder screen](docs/screenshots/guide-builder-desktop.png) |
+
+| Weekly Review | Profile & Preferences |
+| --- | --- |
+| ![Quiet Current Weekly Review screen](docs/screenshots/weekly-review-desktop.png) | ![Quiet Current privacy and preferences on mobile](docs/screenshots/profile-preferences-mobile.png) |
 
 ## Tech Stack
 

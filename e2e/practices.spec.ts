@@ -29,7 +29,7 @@ test.describe("Practice library run flow", () => {
     await expect(page.locator(".practice-grid .practice-card").first()).toBeVisible({ timeout: 15_000 });
 
     const firstCard = page.locator(".practice-grid .practice-card").first();
-    await firstCard.getByRole("button", { name: /^Start / }).first().click();
+    await firstCard.getByRole("button", { name: "Start", exact: true }).click();
 
     const dialog = page.getByRole("dialog").filter({ has: page.getByText("Short practice") }).first();
     await expect(dialog).toBeVisible();
