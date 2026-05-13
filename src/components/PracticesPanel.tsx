@@ -24,6 +24,8 @@ const FILTER_CHIPS = [
   { id: "short", label: "Under 5 min", tag: "", maxMin: 5 },
 ];
 
+const FEATURED_LINE = "A two-minute reset for when your mind is trying to solve everything.";
+
 const CATEGORY_DEFS = [
   {
     id: "calm",
@@ -111,6 +113,17 @@ function benefitFor(p: Practice) {
 
 function byDuration(a: Practice, b: Practice) {
   return (a.est_minutes ?? 99) - (b.est_minutes ?? 99) || a.sort_order - b.sort_order;
+}
+
+function groupPracticesByCategory(items: Practice[]) {
+  const groups = new Map<string, Practice[]>();
+  for (const item of items) {
+    const key = item.category || "general";
+    const current = groups.get(key) || [];
+    current.push(item);
+    groups.set(key, current);
+  }
+  return Array.from(groups.entries()).map(([category, rows]) => ({ category, rows }));
 }
 
 export function PracticesPanel({
@@ -206,8 +219,9 @@ export function PracticesPanel({
       activeCategory === "all" ? practices : practices.filter((p) => categoryMatches(p, activeCategory));
     return filtered.slice().sort((a, b) => a.sort_order - b.sort_order);
   }, [activeCategory, practices]);
-  const libraryPreview = showAll ? visiblePractices : visiblePractices.slice(0, 9);
+  const libraryPreview = showAll ? visiblePractices : visiblePractices.slice(0, 6);
   const hasMoreLibrary = visiblePractices.length > libraryPreview.length;
+  const groupedLibrary = showAll && activeCategory === "all" ? groupPracticesByCategory(visiblePractices) : [];
   const hasActiveFilter = tag !== "" || maxMin !== "";
   const activeFilterLabel = tag
     ? TAG_OPTIONS.find((o) => o.id === tag)?.label || tag
@@ -227,6 +241,7 @@ export function PracticesPanel({
           <div className="practice-now-copy">
             <p className="practice-now-eyebrow">Featured practice</p>
             <h3 id="practice-now-title">{featured.title}</h3>
+            <p className="practice-now-resonance">{FEATURED_LINE}</p>
             <p>{featured.summary}</p>
             <div className="practice-now-meta">
               <span>{featured.est_minutes ?? 2} min</span>
@@ -244,7 +259,7 @@ export function PracticesPanel({
             <button type="button" className="btn btn-primary" onClick={() => setRun(featured)}>
               Start practice
             </button>
-            <button type="button" className="btn" onClick={(e) => void toggleFavorite(featured, e)}>
+            <button type="button" className="btn practice-save-subtle" onClick={(e) => void toggleFavorite(featured, e)}>
               {featured.is_favorite ? "Saved" : "Save"}
             </button>
           </div>
@@ -389,8 +404,8 @@ export function PracticesPanel({
                 }}
               >
                 <span>All</span>
-                <strong>{practices.length}</strong>
                 <small>Full library</small>
+                <strong>{practices.length} practices</strong>
               </button>
               {categoryCounts.map((c) => (
                 <button
@@ -404,8 +419,8 @@ export function PracticesPanel({
                   }}
                 >
                   <span>{c.label}</span>
-                  <strong>{c.count}</strong>
                   <small>{c.note}</small>
+                  <strong>{c.count} practices</strong>
                 </button>
               ))}
             </div>
@@ -414,10 +429,10 @@ export function PracticesPanel({
           <section className="practice-section practice-library-section" aria-labelledby="practice-library-title">
             <div className="practice-section-head practice-section-head--inline">
               <div>
-                <p className="practice-section-kicker">Full library</p>
+                <p className="practice-section-kicker">{showAll ? "Expanded library" : "Recommended for now"}</p>
                 <h3 id="practice-library-title">
                   {activeCategory === "all"
-                    ? "Complete library"
+                    ? "Short resets"
                     : CATEGORY_DEFS.find((c) => c.id === activeCategory)?.label || "Filtered practices"}
                 </h3>
               </div>
@@ -426,56 +441,38 @@ export function PracticesPanel({
               </p>
             </div>
 
-            <div className="practice-grid">
-              {libraryPreview.map((p) => (
-                <article
-                  key={p.id}
-                  className={
-                    "card practice-card practice-card--interactive" +
-                    (featured?.id === p.id ? " practice-card--suggested" : "")
-                  }
-                  tabIndex={0}
-                  aria-label={`Open practice: ${p.title}`}
-                  onClick={() => setRun(p)}
-                  onKeyDown={(e: KeyboardEvent) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setRun(p);
-                    }
-                  }}
-                >
-                  <div className="practice-card-head">
-                    <div className="pill">{formatCategory(p.category)}</div>
-                    <button
-                      type="button"
-                      className={"fav-btn" + (p.is_favorite ? " on" : "")}
-                      onClick={(e) => void toggleFavorite(p, e)}
-                      title={p.is_favorite ? "Unfavorite" : "Favorite"}
-                      aria-pressed={p.is_favorite}
-                      aria-label={p.is_favorite ? "Remove from saved" : "Save practice"}
-                    />
-                  </div>
-                  <h3>{p.title}</h3>
-                  <p className="practice-body">{benefitFor(p)}</p>
-                  <p className="practice-card-summary">{p.summary}</p>
-                  <div className="practice-tags" aria-label="Tags">
-                    {visibleTags(p)
-                      .slice(0, 3)
-                      .map((t) => (
-                        <span key={t} className="pr-tag-pill">
-                          {t}
-                        </span>
+            {groupedLibrary.length > 0 ? (
+              <div className="practice-library-groups">
+                {groupedLibrary.map((group) => (
+                  <section key={group.category} className="practice-library-group" aria-label={formatCategory(group.category)}>
+                    <h4>{formatCategory(group.category)}</h4>
+                    <div className="practice-grid">
+                      {group.rows.map((p) => (
+                        <PracticeCard
+                          key={p.id}
+                          practice={p}
+                          suggested={featured?.id === p.id}
+                          onStart={setRun}
+                          onToggleFavorite={toggleFavorite}
+                        />
                       ))}
-                    {p.est_minutes != null && <span className="pr-tag-pill pr-min">~{p.est_minutes} min</span>}
-                  </div>
-                  <div className="practice-card-actions" onClick={(e) => e.stopPropagation()}>
-                    <button type="button" className="btn btn-primary" onClick={() => setRun(p)}>
-                      Start {p.est_minutes != null ? `${p.est_minutes} min` : "practice"}
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
+                    </div>
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <div className="practice-grid">
+                {libraryPreview.map((p) => (
+                  <PracticeCard
+                    key={p.id}
+                    practice={p}
+                    suggested={featured?.id === p.id}
+                    onStart={setRun}
+                    onToggleFavorite={toggleFavorite}
+                  />
+                ))}
+              </div>
+            )}
 
             {hasMoreLibrary || showAll ? (
               <div className="practice-show-more-row">
@@ -490,5 +487,52 @@ export function PracticesPanel({
 
       {run && <PracticeRun practice={run} onClose={() => setRun(null)} />}
     </div>
+  );
+}
+
+function PracticeCard({
+  practice,
+  suggested,
+  onStart,
+  onToggleFavorite,
+}: {
+  practice: Practice;
+  suggested: boolean;
+  onStart: (practice: Practice) => void;
+  onToggleFavorite: (practice: Practice, event: MouseEvent) => void;
+}) {
+  return (
+    <article
+      className={"card practice-card practice-card--interactive" + (suggested ? " practice-card--suggested" : "")}
+      tabIndex={0}
+      aria-label={`Open practice: ${practice.title}`}
+      onClick={() => onStart(practice)}
+      onKeyDown={(e: KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onStart(practice);
+        }
+      }}
+    >
+      <div className="practice-card-head">
+        <div className="pill">{formatCategory(practice.category)}</div>
+        <button
+          type="button"
+          className={"fav-btn" + (practice.is_favorite ? " on" : "")}
+          onClick={(e) => onToggleFavorite(practice, e)}
+          aria-pressed={practice.is_favorite}
+          aria-label={practice.is_favorite ? "Remove from saved" : "Save practice"}
+        />
+      </div>
+      <h3>{practice.title}</h3>
+      <p className="practice-body">{benefitFor(practice)}</p>
+      <p className="practice-card-summary">{practice.summary}</p>
+      <div className="practice-card-actions" onClick={(e) => e.stopPropagation()}>
+        <span className="practice-card-duration">{practice.est_minutes != null ? `${practice.est_minutes} min` : "Short reset"}</span>
+        <button type="button" className="btn btn-primary practice-card-start" onClick={() => onStart(practice)}>
+          Start
+        </button>
+      </div>
+    </article>
   );
 }

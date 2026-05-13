@@ -7142,6 +7142,516 @@ p.qc-empty-state {
   }
 }
 
+/* Practice hub 9/10 polish pass: editorial hierarchy, calmer library, no inventory feel. */
+.practices-library {
+  --practice-ink: #1b1725;
+  --practice-muted: #706a7f;
+  --practice-soft: #f8f3eb;
+  --practice-violet: #5f4ca8;
+  --practice-violet-deep: #2d2357;
+  --practice-teal: #255f5d;
+  --practice-line: rgba(58, 48, 82, 0.095);
+  --practice-line-strong: rgba(58, 48, 82, 0.18);
+  --practice-shadow: 0 1px 1px rgba(36, 29, 22, 0.035), 0 24px 70px rgba(45, 35, 87, 0.075);
+  background:
+    radial-gradient(900px 520px at 82% 4%, rgba(201, 191, 235, 0.22), transparent 62%),
+    radial-gradient(760px 420px at 8% 16%, rgba(218, 238, 231, 0.5), transparent 68%),
+    linear-gradient(180deg, #faf7f1 0%, #f4f0e9 100%) !important;
+}
+
+.practices-library .qc-page-header {
+  max-width: 760px;
+  margin-bottom: 22px;
+}
+
+.practices-library .qc-page-subtitle {
+  color: #6f6878;
+  font-size: clamp(1rem, 0.25vw + 0.95rem, 1.12rem);
+  line-height: 1.55;
+}
+
+.practices-library .practice-now-hero {
+  grid-template-columns: minmax(0, 1.08fr) minmax(240px, 0.68fr) !important;
+  min-height: 330px;
+  gap: clamp(20px, 4vw, 52px);
+  align-items: stretch;
+  margin-bottom: 34px !important;
+  padding: clamp(30px, 3.7vw, 46px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.68) !important;
+  border-radius: 34px !important;
+  background:
+    linear-gradient(90deg, rgba(255,253,248,0.98) 0%, rgba(255,253,248,0.9) 43%, rgba(255,253,248,0.24) 68%),
+    radial-gradient(circle at 78% 42%, rgba(255,255,255,0.9) 0%, rgba(227, 237, 230, 0.44) 22%, rgba(165, 150, 205, 0.18) 46%, transparent 62%),
+    url("/textures/quiet-current/practice_sitting_goal_orb.png") right center / auto 112% no-repeat,
+    linear-gradient(135deg, #f9f0e2 0%, #e9f0e9 50%, #dcd3ed 100%) !important;
+  box-shadow:
+    0 1px 1px rgba(36, 29, 22, 0.04),
+    0 34px 86px rgba(48, 38, 78, 0.11) !important;
+}
+
+.practices-library .practice-now-hero::before {
+  content: "";
+  position: absolute;
+  right: min(14vw, 190px);
+  bottom: 48px;
+  width: 260px;
+  height: 42px;
+  border-radius: 999px;
+  background: radial-gradient(ellipse, rgba(53, 47, 70, 0.14), transparent 68%);
+  filter: blur(4px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.practices-library .practice-now-hero::after {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(37, 29, 58, 0.07) 100%),
+    radial-gradient(circle at 80% 40%, rgba(255,255,255,0.28), transparent 30%) !important;
+}
+
+.practices-library .practice-now-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.practices-library .practice-now-copy h3 {
+  max-width: 13ch;
+  margin-bottom: 16px;
+  font-size: clamp(2.85rem, 5.1vw, 4.7rem);
+  line-height: 0.9;
+  letter-spacing: -0.07em;
+}
+
+.practices-library .practice-now-resonance {
+  max-width: 36rem !important;
+  margin: 0 0 14px !important;
+  color: #2f2940 !important;
+  font-family: var(--font-serif);
+  font-size: clamp(1.25rem, 1vw + 1rem, 1.78rem) !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.025em;
+}
+
+.practices-library .practice-now-copy p:not(.practice-now-eyebrow):not(.practice-now-benefit):not(.practice-now-resonance) {
+  max-width: 48rem;
+  color: #625c70;
+  font-size: 1.03rem;
+}
+
+.practices-library .practice-now-art {
+  justify-self: end;
+  align-self: center;
+  width: clamp(180px, 18vw, 240px);
+  height: clamp(180px, 18vw, 240px);
+  background:
+    radial-gradient(circle at 48% 45%, rgba(255,255,255,0.96) 0 10%, rgba(238, 242, 234, 0.9) 11% 29%, rgba(189, 178, 218, 0.36) 30% 43%, transparent 44%),
+    radial-gradient(circle, rgba(255,255,255,0.74), rgba(214, 224, 216, 0.42) 42%, rgba(95, 76, 168, 0.12) 64%, transparent 68%);
+  box-shadow:
+    0 34px 58px rgba(45, 35, 87, 0.16),
+    inset 0 1px 0 rgba(255,255,255,0.86);
+}
+
+.practices-library .practice-now-actions {
+  position: absolute;
+  right: clamp(26px, 3.5vw, 50px);
+  bottom: clamp(24px, 3.5vw, 48px);
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.practices-library .practice-now-actions .btn-primary {
+  min-height: 48px;
+  padding: 0 22px;
+  background: linear-gradient(135deg, #276a67, #1d5654) !important;
+  box-shadow: 0 15px 30px rgba(29, 86, 84, 0.22);
+}
+
+.practices-library .practice-save-subtle {
+  min-height: 44px;
+  border-color: transparent !important;
+  color: #4f4960 !important;
+  background: rgba(255, 253, 249, 0.6) !important;
+  box-shadow: none !important;
+}
+
+.practices-library .practice-section {
+  margin-top: 34px;
+}
+
+.practices-library .practice-section-head {
+  margin-bottom: 16px;
+}
+
+.practices-library .practice-section-head h3 {
+  font-size: clamp(1.45rem, 2vw, 2rem);
+  line-height: 1.05;
+}
+
+.practices-library .practice-section-kicker {
+  color: var(--practice-violet);
+}
+
+.practices-library .practice-quick-row,
+.practices-library .practice-saved-row {
+  gap: 14px;
+  scrollbar-width: none;
+}
+
+.practices-library .practice-quick-row::-webkit-scrollbar,
+.practices-library .practice-saved-row::-webkit-scrollbar {
+  display: none;
+}
+
+.practices-library .practice-quick-card {
+  flex-basis: min(300px, 78vw);
+  min-height: 132px;
+  border-color: rgba(58, 48, 82, 0.075);
+  border-radius: 24px;
+  padding: 18px 20px;
+  background:
+    radial-gradient(circle at 90% 12%, rgba(220, 238, 232, 0.72), transparent 44%),
+    rgba(255, 253, 249, 0.84);
+}
+
+@media (min-width: 861px) {
+  .practices-library .practice-quick-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: visible;
+    padding: 2px;
+  }
+
+  .practices-library .practice-quick-card {
+    min-width: 0;
+    flex-basis: auto;
+  }
+}
+
+.practices-library .practices-filter-shell {
+  margin: 28px 0 26px;
+  padding: 11px 12px;
+  border-color: rgba(58, 48, 82, 0.075);
+  background: rgba(255, 253, 249, 0.54);
+  box-shadow: none;
+}
+
+.practices-library .practice-filter-chip--active {
+  background: linear-gradient(135deg, #2d625f, #204f4d);
+  border-color: transparent;
+}
+
+.practices-library .practice-category-rail {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(158px, 1fr));
+  gap: 12px;
+  overflow: visible;
+  padding: 0;
+  scrollbar-width: none;
+}
+
+.practices-library .practice-category-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 104px;
+  border-color: rgba(58, 48, 82, 0.075);
+  border-radius: 22px;
+  padding: 16px 17px;
+  background:
+    linear-gradient(180deg, rgba(255,253,249,0.9), rgba(255,253,249,0.7)),
+    radial-gradient(circle at 88% 10%, rgba(220, 238, 232, 0.5), transparent 42%);
+}
+
+.practices-library .practice-category-card span {
+  color: #282136;
+  font-size: 1.13rem;
+}
+
+.practices-library .practice-category-card small {
+  order: 2;
+  margin-top: 6px;
+  color: #716b7d;
+}
+
+.practices-library .practice-category-card strong {
+  order: 3;
+  margin-top: auto;
+  color: #6e6880;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.practices-library .practice-category-card--active {
+  border-color: rgba(37, 95, 93, 0.3);
+  background:
+    linear-gradient(135deg, rgba(234, 245, 239, 0.98), rgba(255, 253, 249, 0.82)),
+    radial-gradient(circle at 92% 8%, rgba(37, 95, 93, 0.16), transparent 42%);
+  box-shadow: 0 18px 44px rgba(37, 95, 93, 0.1);
+}
+
+.practices-library .practice-library-section {
+  padding: clamp(18px, 2.4vw, 28px);
+  border: 1px solid rgba(58, 48, 82, 0.07);
+  border-radius: 30px;
+  background:
+    radial-gradient(780px 380px at 80% 0%, rgba(220, 238, 232, 0.34), transparent 62%),
+    rgba(255, 253, 249, 0.48);
+}
+
+.practices-library .practice-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.practices-library .practice-card {
+  min-height: 218px !important;
+  padding: 20px !important;
+  border-color: rgba(58, 48, 82, 0.078) !important;
+  border-radius: 24px !important;
+  background:
+    linear-gradient(180deg, rgba(255,253,249,0.98), rgba(255,253,249,0.88)),
+    radial-gradient(circle at 100% 0%, rgba(220, 238, 232, 0.36), transparent 42%) !important;
+  box-shadow: 0 1px 1px rgba(36, 29, 22, 0.035), 0 18px 45px rgba(45, 35, 87, 0.05) !important;
+}
+
+.practices-library .practice-card:hover,
+.practices-library .practice-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(37, 95, 93, 0.18) !important;
+  box-shadow: 0 1px 1px rgba(36, 29, 22, 0.04), 0 24px 62px rgba(45, 35, 87, 0.085) !important;
+}
+
+.practices-library .practice-card-head {
+  align-items: center;
+}
+
+.practices-library .fav-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(58, 48, 82, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 253, 249, 0.72);
+  box-shadow: 0 8px 20px rgba(45, 35, 87, 0.055);
+}
+
+.practices-library .fav-btn::before {
+  content: "";
+  width: 11px;
+  height: 15px;
+  border: 1.8px solid #6e6880;
+  border-bottom: 0;
+  border-radius: 3px 3px 1px 1px;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 74%, 0 100%);
+}
+
+.practices-library .fav-btn.on {
+  border-color: rgba(37, 95, 93, 0.2);
+  background: #e2f0ea;
+}
+
+.practices-library .fav-btn.on::before {
+  border-color: #255f5d;
+  background: #255f5d;
+}
+
+.practices-library .practice-card h3 {
+  max-width: 18ch;
+  font-size: clamp(1.25rem, 0.85vw + 1.05rem, 1.58rem) !important;
+  line-height: 1.08;
+}
+
+.practices-library .practice-body {
+  margin-bottom: 10px !important;
+  color: #4f5c55;
+  font-size: 0.96rem !important;
+}
+
+.practices-library .practice-card-summary {
+  min-height: 0;
+  margin-bottom: 18px;
+  color: #6e6880;
+  font-size: 0.9rem;
+}
+
+.practices-library .practice-tags {
+  display: none;
+}
+
+.practices-library .practice-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: auto;
+}
+
+.practices-library .practice-card-duration {
+  color: #6e6880;
+  font-size: 0.79rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.practices-library .practice-card-actions .practice-card-start {
+  width: auto;
+  min-height: 34px;
+  padding: 7px 13px;
+  border: 1px solid rgba(37, 95, 93, 0.16) !important;
+  color: #245a58 !important;
+  background: rgba(226, 240, 234, 0.72) !important;
+  box-shadow: none !important;
+}
+
+.practices-library .practice-card:hover .practice-card-start,
+.practices-library .practice-card:focus-within .practice-card-start {
+  color: #fff !important;
+  background: linear-gradient(135deg, #276a67, #1d5654) !important;
+}
+
+.practices-library .practice-library-groups {
+  display: grid;
+  gap: 24px;
+}
+
+.practices-library .practice-library-group {
+  display: grid;
+  gap: 12px;
+}
+
+.practices-library .practice-library-group h4 {
+  margin: 0;
+  color: #5d566a;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.practices-library .practice-show-more-row {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(58, 48, 82, 0.07);
+}
+
+.practices-library .practice-show-more {
+  min-height: 44px;
+  border-color: rgba(37, 95, 93, 0.14) !important;
+  color: #245a58 !important;
+  background: rgba(255, 253, 249, 0.72) !important;
+}
+
+@media (max-width: 1180px) {
+  .practices-library .practice-now-actions {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    align-self: end;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 860px) {
+  .practices-library {
+    padding: 16px 14px max(28px, calc(var(--bottom-nav-height, 72px) + env(safe-area-inset-bottom) + 28px)) !important;
+  }
+
+  .practices-library .practice-now-hero {
+    grid-template-columns: 1fr !important;
+    min-height: 0;
+    padding: 22px 22px 18px !important;
+    border-radius: 28px !important;
+    background:
+      linear-gradient(180deg, rgba(255,253,248,0.98) 0%, rgba(255,253,248,0.9) 56%, rgba(239,232,247,0.74) 100%),
+      url("/textures/quiet-current/practice_sitting_goal_orb.png") right bottom / 72% auto no-repeat,
+      linear-gradient(135deg, #f9f0e2 0%, #e9f0e9 50%, #dcd3ed 100%) !important;
+  }
+
+  .practices-library .practice-now-copy h3 {
+    max-width: 12ch;
+    margin-bottom: 10px;
+    font-size: clamp(2.25rem, 10vw, 3.15rem);
+  }
+
+  .practices-library .practice-now-resonance {
+    margin-bottom: 10px !important;
+    font-size: 1.02rem !important;
+  }
+
+  .practices-library .practice-now-copy p:not(.practice-now-eyebrow):not(.practice-now-benefit):not(.practice-now-resonance) {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    font-size: 0.96rem;
+    line-height: 1.45 !important;
+  }
+
+  .practices-library .practice-now-meta {
+    margin-top: 12px;
+  }
+
+  .practices-library .practice-now-benefit {
+    margin-top: 10px;
+    padding: 7px 10px;
+    font-size: 0.82rem;
+  }
+
+  .practices-library .practice-now-art {
+    display: none;
+  }
+
+  .practices-library .practice-now-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    margin-top: 16px;
+  }
+
+  .practices-library .practice-now-actions .btn-primary,
+  .practices-library .practice-save-subtle {
+    min-height: 44px;
+  }
+
+  .practices-library .practice-category-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .practices-library .practice-library-section {
+    padding: 18px;
+    border-radius: 26px;
+  }
+
+  .practices-library .practice-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .practices-library .practice-filter-chips {
+    scrollbar-width: none;
+  }
+
+  .practices-library .practice-filter-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .practices-library .practice-category-rail {
+    grid-template-columns: 1fr;
+  }
+
+  .practices-library .practice-card {
+    min-height: 0 !important;
+  }
+}
+
 /* Guide Builder Agents restoration. Scoped to Guide Builder so Home, Practice, Journal, and Guide chat stay untouched. */
 :root {
   --gb-ink: #172522;
