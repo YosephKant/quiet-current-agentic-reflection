@@ -10,6 +10,8 @@ import { computeHoroscopeAstronomy, parseBirthDateString } from "./horoscope.js"
 import {
   buildGuideFallbackResponse,
   buildGuideSystemPrompt,
+  contemplativeResponseQualityBlock,
+  guideDepthModeForMessages,
   normalizeGuide,
   serializeGuideForDb,
 } from "./guidePrompts.js";
@@ -42,22 +44,13 @@ Do not provide medical, psychiatric, or crisis advice.
 If someone appears in danger or acute distress, encourage local emergency services or a licensed professional.`;
 
 const PERSONA_PROMPTS = {
-  watts: `Persona style: Alan Watts-inspired.
-- Tone: reflective, poetic, gentle paradox, non-grasping.
-- Use nature/water metaphors sparingly and clearly.
-- Encourage direct present-moment noticing over dogma.
-- Avoid claiming exact quotes unless user provided one.`,
-  hicks: `Persona style: Abraham Hicks-inspired.
-- Tone: encouraging, upbeat, emotionally supportive.
-- Focus on relief, alignment, and the next better-feeling thought.
-- Keep language grounded and practical (no absolutist claims).
-- Avoid making promises or deterministic outcomes.`,
+  presence: `Persona style: Presence.
+- A contemplative companion with the presence of an enlightened spirit: calm, intelligent, mysterious, warm, and alive.
+- Draw from philosophy, mysticism, poetry, meditation theory, phenomenology, and subtle inner practice when useful.
+- Preserve wonder without becoming vague. Every abstract idea must become felt, usable, and grounded before the response ends.
+- Speak like a living guide, not a lecturer, therapist, customer support assistant, or generic mindfulness chatbot.
+- Beginner users receive simple accessible grounding. Advanced users may receive subtler, stranger, more expansive doorways.`,
 };
-
-function selectPersona(messages) {
-  const assistantTurns = messages.filter((m) => m.role === "assistant").length;
-  return assistantTurns % 2 === 0 ? "watts" : "hicks";
-}
 
 const MAX_AGENT_SYSTEM_PROMPT_CHARS = 12_000;
 
@@ -65,18 +58,26 @@ function buildSystemPrompt(messages, extras = {}) {
   const rawOverride =
     typeof extras.agentSystemPrompt === "string" ? String(extras.agentSystemPrompt).trim() : "";
   const cappedOverride = rawOverride.slice(0, MAX_AGENT_SYSTEM_PROMPT_CHARS);
+  const depthMode = guideDepthModeForMessages(messages);
   const personaBlock = cappedOverride
     ? `## Persona instructions (user-defined agent)\n${cappedOverride}`
-    : PERSONA_PROMPTS[selectPersona(messages)];
+    : PERSONA_PROMPTS.presence;
 
   let p = `${BASE_SAFETY_PROMPT}
 
 ${personaBlock}
 
+${contemplativeResponseQualityBlock({
+  depthMode,
+  presence: !cappedOverride,
+})}
+
 Behavior rules:
 - Do not mention persona switching unless asked.
 - Ask one gentle follow-up question at most when helpful.
-- Keep answers brief unless the user asks for depth.`;
+- Do not end every response with a question.
+- Keep answers brief unless the user asks for depth.
+- If advanced contemplative mode is active, offer a subtle concept or unexpected connection only when it can become directly experiential.`;
   if (extras.practice) {
     p += `
 
@@ -351,8 +352,9 @@ const AGENT_PROMPT_MAX = 4000;
 /** Max length for model-supplied "figure" / "teacher" display labels (name + optional subtitle). */
 const FIGURE_LABEL_MAX = 120;
 
-function buildAgentSystemPrompt(personaPrompt) {
+function buildAgentSystemPrompt(personaPrompt, messages = []) {
   const p = String(personaPrompt || "").trim().slice(0, AGENT_PROMPT_MAX);
+  const depthMode = guideDepthModeForMessages(messages);
   const body =
     p ||
     "You are a calm, spacious companion for presence and reflective inquiry. Keep replies brief and warm.";
@@ -362,9 +364,12 @@ function buildAgentSystemPrompt(personaPrompt) {
 Follow these instructions closely while honoring every safety rule above:
 ${body}
 
+${contemplativeResponseQualityBlock({ depthMode })}
+
 Behavior:
 - Stay concise unless the user asks for depth.
-- At most one gentle follow-up question when it clearly helps.`;
+- At most one gentle follow-up question when it clearly helps.
+- Do not end every response with a question.`;
 }
 
 function selectAgentRows(db) {
@@ -1951,6 +1956,12 @@ export function createApp(options = {}) {
     }
 
     const agentId = Number(req.body?.agentId);
+    const messageTail = messages.slice(-24).map((m) => ({
+      role: String(m.role || "").toLowerCase() === "assistant" ? "assistant" : "user",
+      content: String(m.content ?? ""),
+    }));
+    const depthMode = guideDepthModeForMessages(messageTail);
+
     let systemPrompt = "";
     let fallbackGuide = null;
     if (Number.isFinite(agentId) && agentId > 0) {
@@ -1960,24 +1971,20 @@ export function createApp(options = {}) {
       fallbackGuide = guide;
       systemPrompt = buildGuideSystemPrompt(guide, {
         userAppContext: buildAgentAppContext(db, guide),
+        depthMode,
       });
     } else {
       const personaPrompt = String(req.body?.systemPrompt ?? "").trim().slice(0, AGENT_PROMPT_MAX);
       if (personaPrompt) {
-        systemPrompt = buildAgentSystemPrompt(personaPrompt);
+        systemPrompt = buildAgentSystemPrompt(personaPrompt, messageTail);
       } else if (hasStructuredGuideInput(req.body)) {
         const guide = normalizeGuide(req.body);
         fallbackGuide = guide;
-        systemPrompt = buildGuideSystemPrompt(guide);
+        systemPrompt = buildGuideSystemPrompt(guide, { depthMode });
       } else {
         return res.status(400).json({ error: "agentId or non-empty systemPrompt required" });
       }
     }
-
-    const messageTail = messages.slice(-24).map((m) => ({
-      role: String(m.role || "").toLowerCase() === "assistant" ? "assistant" : "user",
-      content: String(m.content ?? ""),
-    }));
 
     const openaiFormat = [{ role: "system", content: systemPrompt }, ...messageTail];
 
@@ -2287,7 +2294,7 @@ export function createApp(options = {}) {
           ? OLLAMA_MODEL
           : OPENAI_MODEL,
       ollamaUrl: OLLAMA_URL,
-      personaPreview: "alternating watts/hicks",
+      personaPreview: "Presence",
     });
   });
 

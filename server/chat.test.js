@@ -47,7 +47,8 @@ describe("chat API", () => {
 
     const fetchCallBody = JSON.parse(vi.mocked(fetch).mock.calls[0][1].body);
     expect(fetchCallBody.messages[0].role).toBe("system");
-    expect(fetchCallBody.messages[0].content).toContain("Alan Watts-inspired");
+    expect(fetchCallBody.messages[0].content).toContain("Persona style: Presence");
+    expect(fetchCallBody.messages[0].content).toContain("Do not end every response with a question");
   });
 
   it("uses optional systemPrompt override in system message", async () => {
@@ -72,7 +73,7 @@ describe("chat API", () => {
     expect(res.status).toBe(200);
     const fetchCallBody = JSON.parse(vi.mocked(fetch).mock.calls[0][1].body);
     expect(fetchCallBody.messages[0].content).toContain(custom);
-    expect(fetchCallBody.messages[0].content).not.toContain("Alan Watts-inspired");
+    expect(fetchCallBody.messages[0].content).not.toContain("Persona style: Presence");
   });
 
   it("returns 502 with hint when upstream fails", async () => {
@@ -95,7 +96,7 @@ describe("chat API", () => {
     expect(res.body.hint).toContain("Ollama");
   });
 
-  it("alternates to Abraham Hicks persona on next assistant turn", async () => {
+  it("keeps the built-in Presence persona across assistant turns", async () => {
     db = new Database(":memory:");
     const { app } = createApp({ db });
 
@@ -120,7 +121,8 @@ describe("chat API", () => {
 
     expect(res.status).toBe(200);
     const fetchCallBody = JSON.parse(vi.mocked(fetch).mock.calls[0][1].body);
-    expect(fetchCallBody.messages[0].content).toContain("Abraham Hicks-inspired");
+    expect(fetchCallBody.messages[0].content).toContain("Persona style: Presence");
+    expect(fetchCallBody.messages[0].content).not.toContain("Abraham Hicks-inspired");
   });
 
   it("GET /api/chat/messages returns persisted rows", async () => {
@@ -201,7 +203,7 @@ describe("chat API", () => {
     expect(res.status).toBe(200);
     const fetchCallBody = JSON.parse(vi.mocked(fetch).mock.calls[0][1].body);
     expect(fetchCallBody.messages[0].content).toContain("SPECIAL_AGENT_MARKER");
-    expect(fetchCallBody.messages[0].content).not.toContain("Alan Watts-inspired");
+    expect(fetchCallBody.messages[0].content).not.toContain("Persona style: Presence");
   });
 
   it("uses structured active guide prompt when agentId is sent to main Guide chat", async () => {
@@ -248,6 +250,34 @@ describe("chat API", () => {
     expect(system).toContain("Tone: Warm");
     expect(system).toContain("Rest, Overthinking");
     expect(system).toContain("Move slowly");
-    expect(system).not.toContain("Alan Watts-inspired");
+    expect(system).not.toContain("Persona style: Presence");
+  });
+
+  it("activates advanced contemplative mode for built-in Presence depth requests", async () => {
+    db = new Database(":memory:");
+    const { app } = createApp({ db });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ message: { content: "advanced response" } }),
+      }))
+    );
+
+    const res = await request(app)
+      .post("/api/chat")
+      .send({
+        sessionId: 1,
+        messages: [{ role: "user", content: "Keep going, throw me another curveball of knowledge." }],
+      });
+
+    expect(res.status).toBe(200);
+    const fetchCallBody = JSON.parse(vi.mocked(fetch).mock.calls[0][1].body);
+    const system = fetchCallBody.messages[0].content;
+    expect(system).toContain("Advanced contemplative mode is active");
+    expect(system).toContain("Translate it into lived experience");
+    expect(system).toContain("ekstasis");
+    expect(system).toContain("How does this resonate?");
   });
 });

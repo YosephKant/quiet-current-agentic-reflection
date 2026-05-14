@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildGuideFallbackResponse,
   buildGuideSystemPrompt,
+  detectGuideDepthMode,
   normalizeGuide,
 } from "./guidePrompts.js";
 
@@ -39,6 +40,16 @@ const fixtures = {
     focusAreas: ["Body", "Grounding", "Presence"],
     customInstructions: "Use breath, posture, sensory detail, and the room.",
   },
+  presence: {
+    name: "Presence",
+    shortDescription: "A spacious guide for direct awareness and subtle inner practice.",
+    rolePurpose: "Contemplative companion",
+    tone: "Warm and mysterious",
+    speakingStyle: "Spacious and precise",
+    encouragementStyle: "Quiet confidence",
+    focusAreas: ["Presence", "Awareness", "Mysticism"],
+    customInstructions: "Preserve wonder while staying grounded in direct experience.",
+  },
 };
 
 describe("guide prompt composer", () => {
@@ -55,6 +66,7 @@ describe("guide prompt composer", () => {
     expect(prompt).toContain("D. Default move");
     expect(prompt).toContain("E. Avoid list");
     expect(prompt).toContain("Ask at most one gentle question");
+    expect(prompt).toContain("Do not end every message with a question");
   });
 
   it("keeps safety boundaries present in every system prompt", () => {
@@ -121,7 +133,9 @@ describe("guide prompt composer", () => {
   });
 
   it("same user message produces visibly different responses across guides", () => {
-    const fallbacks = Object.values(fixtures).map((guide) => buildGuideFallbackResponse(guide, userMessage));
+    const fallbacks = [fixtures.wayne, fixtures.clarity, fixtures.grounded].map((guide) =>
+      buildGuideFallbackResponse(guide, userMessage)
+    );
 
     expect(new Set(fallbacks).size).toBe(3);
     expect(fallbacks[0]).toMatch(/intention|attention|aligned/i);
@@ -205,5 +219,67 @@ describe("guide prompt composer", () => {
     expect(withContext).toContain("USER APP CONTEXT");
     expect(withContext).toContain("Use this context gently and only when relevant");
     expect(withContext).toContain("I felt calmer after a short breath practice");
+  });
+
+  it("detects advanced contemplative mode from subtle-depth requests", () => {
+    expect(detectGuideDepthMode("Go to a more subtle/complex knowledge you know.")).toBe(
+      "advancedContemplative"
+    );
+    expect(detectGuideDepthMode("Keep going, throw me another curveball of knowledge.")).toBe(
+      "advancedContemplative"
+    );
+    expect(detectGuideDepthMode("I'm not quite getting that one.")).toBe("advancedContemplative");
+    expect(detectGuideDepthMode("What do these moments of threshold represent?")).toBe(
+      "advancedContemplative"
+    );
+    expect(detectGuideDepthMode("I feel anxious and need a simple breath.")).toBe("standard");
+  });
+
+  it("Presence prompt preserves strange concepts but requires embodied translation", () => {
+    const prompt = buildGuideSystemPrompt(fixtures.presence);
+
+    expect(prompt).toContain("enlightened contemplative companion");
+    expect(prompt).toContain("ekstasis");
+    expect(prompt).toContain("Kairos");
+    expect(prompt).toContain("the cloud of unknowing");
+    expect(prompt).toContain("luminous emptiness");
+    expect(prompt).toContain("Translate it into lived experience");
+    expect(prompt).toContain("body, breath, attention, mood, identity");
+    expect(prompt).toContain("Give a tiny way to taste it directly");
+    expect(prompt).toContain("Do not use wisdom as decoration");
+    expect(prompt).toContain("Do not use mystery as fog");
+  });
+
+  it("advanced mode prompt instructs depth without beginner fallback", () => {
+    const prompt = buildGuideSystemPrompt(fixtures.presence, {
+      depthMode: "advancedContemplative",
+    });
+
+    expect(prompt).toContain("Advanced contemplative mode is active");
+    expect(prompt).toContain("Respect the user's existing knowledge");
+    expect(prompt).toContain("Do not pull them back into beginner mindfulness advice");
+    expect(prompt).toContain("strange, philosophical, mystical, poetic, or contemplative concept");
+  });
+
+  it("discourages generic engagement-question endings", () => {
+    const prompt = buildGuideSystemPrompt(fixtures.presence);
+
+    expect(prompt).toContain("How does this resonate?");
+    expect(prompt).toContain("Would you like to explore this?");
+    expect(prompt).toContain("What do you think?");
+    expect(prompt).toContain("Does this make sense?");
+    expect(prompt).toContain("Prefer endings that are micro-practices, quiet observations");
+  });
+
+  it("advanced fallback gives a concept as a felt doorway instead of a generic question", () => {
+    const fallback = buildGuideFallbackResponse(
+      fixtures.presence,
+      "I've been mastering this. Go deeper."
+    );
+
+    expect(fallback).toContain("aporia");
+    expect(fallback).toMatch(/body|breath|mind|feel|notice/i);
+    expect(fallback).toContain("For one breath");
+    expect(fallback).not.toMatch(/\?$/);
   });
 });
