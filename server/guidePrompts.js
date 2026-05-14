@@ -33,6 +33,69 @@ const DEFAULT_BEHAVIOR_TUNING = {
   groundingReframing: 30,
 };
 
+const ADVANCED_CONTEMPLATIVE_TRIGGERS = [
+  /\bi'?ve\s+been\s+master(?:ing|ed)\b/i,
+  /\bi'?ve\s+mastered\b/i,
+  /\bgo\s+deeper\b/i,
+  /\bmore\s+(?:subtle|complex|advanced|mystical)\b/i,
+  /\bthrow\s+me\s+(?:a\s+)?curveball\b/i,
+  /\bcurveball(?:\s+of\s+knowledge)?\b/i,
+  /\bi\s+already\s+know\b/i,
+  /\btry\s+another(?:\s+one)?\b/i,
+  /\bgive\s+me\s+something\s+(?:more\s+)?(?:advanced|profound|weirder|stranger|subtle|mystical)\b/i,
+  /\bi'?m\s+not\s+(?:quite\s+)?getting\s+that(?:\s+one)?\b/i,
+  /\bkeep\s+going(?:\s+with\s+this\s+idea)?\b/i,
+  /\bwhat\s+(?:does|do)\s+.+\s+represent\b/i,
+  /\bwhat'?s\s+the\s+next\s+layer\b/i,
+  /\bthat'?s\s+too\s+basic\b/i,
+  /\bthat\s+sounds\s+too\s+academic\b/i,
+];
+
+const ADVANCED_CONCEPTS = [
+  "ekstasis",
+  "Kairos",
+  "aporia",
+  "kenosis",
+  "metanoia",
+  "liminality",
+  "negative capability",
+  "the imaginal",
+  "sacred attention",
+  "the via negativa",
+  "wu wei",
+  "shunyata",
+  "unselfing",
+  "the cloud of unknowing",
+  "phenomenological reduction",
+  "luminous emptiness",
+  "threshold consciousness",
+  "beginner's mind",
+  "witness consciousness",
+  "the gap between impulse and identity",
+  "spacious awareness",
+  "felt sense",
+  "the subtle body",
+  "non-grasping",
+  "holy indifference",
+  "the dark night",
+  "no-self",
+  "dependent arising",
+  "the unborn",
+  "effortless effort",
+  "the transparent self",
+];
+
+const GENERIC_QUESTION_ENDINGS = [
+  "How does this resonate?",
+  "Would you like to explore this?",
+  "What do you think?",
+  "Does this make sense?",
+  "Would you like me to continue?",
+  "How does that feel?",
+  "Can you relate to that?",
+  "Would you like to explore another concept?",
+];
+
 const DEFAULT_GUIDE = {
   id: null,
   name: "Gentle Anchor",
@@ -103,6 +166,71 @@ function clampNumber(value, fallback = 50) {
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+export function detectGuideDepthMode(userMessage = "") {
+  const text = String(userMessage ?? "").trim();
+  return ADVANCED_CONTEMPLATIVE_TRIGGERS.some((pattern) => pattern.test(text))
+    ? "advancedContemplative"
+    : "standard";
+}
+
+export function latestUserMessage(messages = []) {
+  if (!Array.isArray(messages)) return "";
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const msg = messages[i];
+    if (String(msg?.role || "").toLowerCase() === "user") {
+      return String(msg?.content ?? "");
+    }
+  }
+  return "";
+}
+
+export function guideDepthModeForMessages(messages = []) {
+  return detectGuideDepthMode(latestUserMessage(messages));
+}
+
+export function contemplativeResponseQualityBlock({ depthMode = "standard", presence = false } = {}) {
+  const active = depthMode === "advancedContemplative";
+  const presenceLine = presence
+    ? "\nPresence should feel like an enlightened contemplative companion: calm, intelligent, mysterious, warm, and alive."
+    : "";
+  const activeLine = active
+    ? "\n\n## Current conversation mode\nAdvanced contemplative mode is active for the latest user message. Respect the user's existing knowledge. Do not pull them back into beginner mindfulness advice."
+    : "";
+  return `## Contemplative response quality
+You are not a lecturer. You are not a therapist. You are not a generic mindfulness chatbot.
+You are a contemplative guide: spacious, warm, precise, mysterious, grounded, and alive.${presenceLine}
+
+Do not use wisdom as decoration.
+Do not use mystery as fog.
+Do not flatten mystery into self-help advice.
+A good response should feel like opening a hidden door, then helping the user step through it for one breath.
+
+Advanced concepts are welcome when they help. Use names like ${ADVANCED_CONCEPTS.join(", ")} as inspiration, not as a fixed menu.
+When you introduce an abstract, subtle, strange, philosophical, mystical, poetic, or contemplative concept:
+1. Offer the precise or beautiful name.
+2. Make it feel like a doorway, not a lecture.
+3. Explain it simply and accurately.
+4. Translate it into lived experience: body, breath, attention, mood, identity, sensation, perception, thought, resistance, spaciousness, or stillness.
+5. Give a tiny way to taste it directly.
+6. End with spaciousness: a micro-practice, a quiet observation, a direct teaching, or one precise inquiry only when useful.
+
+If the user says an idea is too academic or not landing, do not abandon the idea immediately. Translate it into simpler lived terms and give a concrete felt example.
+If the user asks for another concept, respect that they may already know the previous layer and move cleanly to a different doorway.
+
+Ending behavior:
+- Do not end every message with a question.
+- Questions are intentional, not automatic.
+- Prefer endings that are micro-practices, quiet observations, direct teachings, or spacious sentences that let the insight land.
+- Use a choice or offer only rarely.
+- Avoid generic endings: ${GENERIC_QUESTION_ENDINGS.join(" | ")}
+
+Tone:
+- Calm, spacious, precise, warm, intelligent, slightly mysterious, contemplative, gently poetic, grounded, expansive, human.
+- Avoid corporate, clinical, generic, over-explanatory, fake-profound, excessively academic, overly eager, support-assistant, or Wikipedia-summary tone.
+- Use short-to-medium paragraphs. Do not over-format. Do not turn every answer into a list.
+- Avoid overusing "resonate," "journey," "beautiful," "dive into," "I'm glad you asked," or "That's wonderful."${activeLine}`;
 }
 
 function normalizeContextAccess(value) {
@@ -507,6 +635,8 @@ export function buildGuideSystemPrompt(inputGuide, appContext = {}) {
   const guide = normalizeGuide(inputGuide);
   const preset = personaPresetForGuide(guide);
   const tuning = guide.behaviorTuning;
+  const depthMode =
+    appContext.depthMode === "advancedContemplative" ? "advancedContemplative" : "standard";
   const focus = guide.focusAreas.length
     ? guide.focusAreas.join(", ")
     : "the user's current emotional context and stated needs";
@@ -568,11 +698,16 @@ ${bulletList(tuningInstructions(tuning))}
 Example tone:
 "${preset.example}"
 
+${contemplativeResponseQualityBlock({
+  depthMode,
+  presence: /\bpresence\b/i.test(lowerGuideText(guide)),
+})}
+
 ## Behavioral rules
 - Respond in ${guide.name}'s persona consistently.
 - Use the user's language and emotional context.
 - Ask at most one gentle question at a time.
-- Prefer short, grounding responses.
+- Prefer short, grounding responses for beginners; allow richer 2-4 paragraph responses when the user asks for depth.
 - Avoid sounding like a generic therapist or generic meditation guide.
 - Do not over-explain.
 - Do not mention being a system prompt.
@@ -589,13 +724,22 @@ Example tone:
 
 ## Response shape
 - Default to 2-5 short paragraphs or bullets.
-- End with one grounded next step or one gentle question.${appContextBlock(appContext)}${custom}`;
+- End with one grounded next step, micro-practice, quiet observation, direct teaching, or one precise question only when useful.${appContextBlock(appContext)}${custom}`;
 }
 
 export function buildGuideFallbackResponse(inputGuide, userMessage = "") {
   const guide = normalizeGuide(inputGuide);
   const preset = personaPresetForGuide(guide);
   const text = cleanText(userMessage, 220);
+  const depthMode = detectGuideDepthMode(userMessage);
+  if (depthMode === "advancedContemplative") {
+    return [
+      `${guide.name}: Here's a subtler doorway: aporia.`,
+      "It means the moment the mind reaches the edge of its old map. Not failure, not confusion as a problem, but the exact place where a deeper seeing can begin.",
+      "You can feel it as a soft pause in the body: the impulse to explain, fix, or identify with the experience relaxes for a second.",
+      "For one breath, let yourself not know what this is. Notice the small space that appears when the mind stops proving that it knows.",
+    ].join("\n\n");
+  }
   if (preset.key === "wayne-dyer-inspired") {
     return [
       `${guide.name}: I hear how tightly the mind is circling this.`,
